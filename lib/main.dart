@@ -4,7 +4,13 @@ import 'package:profeapp/states/theme/theme_notifier.dart';
 
 import 'package:provider/provider.dart';
 
-import 'package:profeapp/states/auth_notifier.dart';
+import 'package:profeapp/services/auth_notifier.dart';
+import 'package:profeapp/services/group_notifier.dart';
+import 'package:profeapp/services/student_notifier.dart';
+import 'package:profeapp/services/attendance_notifier.dart';
+import 'package:profeapp/services/task_notifier.dart';
+import 'package:profeapp/services/subject_notifier.dart';
+import 'package:profeapp/services/grade_notifier.dart';
 
 void main() {
   runApp(
@@ -12,6 +18,12 @@ void main() {
       providers: [
         ChangeNotifierProvider(create: (_) => ThemeNotifier()),
         ChangeNotifierProvider(create: (_) => AuthNotifier()),
+        ChangeNotifierProvider(create: (_) => GroupNotifier()),
+        ChangeNotifierProvider(create: (_) => StudentNotifier()),
+        ChangeNotifierProvider(create: (_) => AttendanceNotifier()),
+        ChangeNotifierProvider(create: (_) => TaskNotifier()),
+        ChangeNotifierProvider(create: (_) => SubjectNotifier()),
+        ChangeNotifierProvider(create: (_) => GradeNotifier()),
       ],
       child: const MyApp(),
     ),

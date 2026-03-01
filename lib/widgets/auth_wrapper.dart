@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:profeapp/screens/home_screen.dart';
+import 'package:profeapp/screens/main_layout.dart';
 import 'package:profeapp/screens/login_screen.dart';
-import 'package:profeapp/states/auth_notifier.dart';
+import 'package:profeapp/services/auth_notifier.dart';
 import 'package:provider/provider.dart';
 
 class AuthWrapper extends StatelessWidget {
@@ -12,7 +12,7 @@ class AuthWrapper extends StatelessWidget {
     final authNotifier = Provider.of<AuthNotifier>(context);
 
     if (authNotifier.isAuthenticated) {
-      return const HomeScreen();
+      return const MainLayout();
     } else {
       return const LoginScreen();
     }

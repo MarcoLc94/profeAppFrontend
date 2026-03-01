@@ -1,23 +1,43 @@
 import 'package:flutter/material.dart';
-import 'package:profeapp/states/auth_notifier.dart';
-import 'package:provider/provider.dart';
+import 'package:profeapp/screens/groups/groups_screen.dart';
+import 'package:profeapp/screens/user_profile_screen.dart';
+import 'package:profeapp/screens/subjects/subjects_grades_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final authNotifier = Provider.of<AuthNotifier>(context);
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Inicio'),
         backgroundColor: const Color(0xFF005E3E),
         foregroundColor: Colors.white,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () => authNotifier.logout(),
+          Padding(
+            padding: const EdgeInsets.only(right: 16.0),
+            child: GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const UserProfileScreen(),
+                  ),
+                );
+              },
+              child: const CircleAvatar(
+                radius: 18,
+                backgroundColor: Colors.white,
+                child: Text(
+                  'JD',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF005E3E),
+                  ),
+                ),
+              ),
+            ),
           ),
         ],
       ),
@@ -47,15 +67,17 @@ class HomeScreen extends StatelessWidget {
                 children: [
                   _buildDashboardCard(
                     context,
-                    'Asistencia',
-                    Icons.how_to_reg_rounded,
+                    'Grupos',
+                    Icons.groups_rounded,
                     Colors.blue,
-                  ),
-                  _buildDashboardCard(
-                    context,
-                    'Calificaciones',
-                    Icons.grade_rounded,
-                    Colors.orange,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const GroupsScreen(),
+                        ),
+                      );
+                    },
                   ),
                   _buildDashboardCard(
                     context,
@@ -71,9 +93,17 @@ class HomeScreen extends StatelessWidget {
                   ),
                   _buildDashboardCard(
                     context,
-                    'Conducta',
-                    Icons.emoji_emotions_outlined,
+                    'Materias',
+                    Icons.book_rounded,
                     Colors.purple,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const SubjectsGradesScreen(),
+                        ),
+                      );
+                    },
                   ),
                   _buildDashboardCard(
                     context,
@@ -105,13 +135,14 @@ class HomeScreen extends StatelessWidget {
     BuildContext context,
     String title,
     IconData icon,
-    Color color,
-  ) {
+    Color color, {
+    VoidCallback? onTap,
+  }) {
     return Card(
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: InkWell(
-        onTap: () {},
+        onTap: onTap ?? () {},
         borderRadius: BorderRadius.circular(16),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
