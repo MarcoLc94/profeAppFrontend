@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:profeapp/models/group.dart';
 import 'package:provider/provider.dart';
 import 'package:profeapp/models/task.dart';
 import 'package:profeapp/services/task_notifier.dart';
 
 class CreateTaskScreen extends StatefulWidget {
-  const CreateTaskScreen({super.key});
+  final Group group;
+  const CreateTaskScreen({super.key, required this.group});
 
   @override
   State<CreateTaskScreen> createState() => _CreateTaskScreenState();
@@ -13,7 +15,8 @@ class CreateTaskScreen extends StatefulWidget {
 
 class _CreateTaskScreenState extends State<CreateTaskScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
+  final _titleController = TextEditingController();
+  final _descriptionController = TextEditingController();
   final _subjectController = TextEditingController();
   DateTime? _selectedDate;
   TimeOfDay? _selectedTime;
@@ -40,7 +43,7 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
     }
   }
 
-  void _submit() {
+  void _submit() async {
     if (_formKey.currentState!.validate()) {
       if (_selectedDate == null || _selectedTime == null) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -51,16 +54,28 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
 
       final taskNotifier = Provider.of<TaskNotifier>(context, listen: false);
       final newTask = Task(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        name: _nameController.text,
+        id: '',
+        title: _titleController.text,
+        description: _descriptionController.text,
         subject: _subjectController.text,
         dueDate: _selectedDate!,
         dueTime: _selectedTime!.format(context),
         creationDate: DateTime.now(),
       );
 
-      taskNotifier.addTask(newTask);
-      Navigator.pop(context);
+      final success = await taskNotifier.addTask(
+        int.parse(widget.group.id),
+        newTask,
+      );
+      if (mounted) {
+        if (success) {
+          Navigator.pop(context);
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Error al crear la tarea')),
+          );
+        }
+      }
     }
   }
 
@@ -80,14 +95,24 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               TextFormField(
-                controller: _nameController,
+                controller: _titleController,
                 decoration: const InputDecoration(
-                  labelText: 'Nombre de la Tarea',
+                  labelText: 'Título de la Tarea',
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.assignment),
                 ),
                 validator: (value) =>
                     value == null || value.isEmpty ? 'Campo requerido' : null,
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _descriptionController,
+                decoration: const InputDecoration(
+                  labelText: 'Descripción',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.description),
+                ),
+                maxLines: 3,
               ),
               const SizedBox(height: 16),
               TextFormField(
@@ -109,7 +134,7 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
                 ),
                 trailing: const Icon(Icons.calendar_today),
                 onTap: _pickDate,
-                tileColor: Colors.grey.withValues(alpha: 0.05),
+                tileColor: Colors.grey.withOpacity(0.05),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -123,7 +148,7 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
                 ),
                 trailing: const Icon(Icons.access_time),
                 onTap: _pickTime,
-                tileColor: Colors.grey.withValues(alpha: 0.05),
+                tileColor: Colors.grey.withOpacity(0.05),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),

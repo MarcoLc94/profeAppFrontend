@@ -1,11 +1,29 @@
 import 'package:flutter/material.dart';
+import 'package:profeapp/models/group.dart';
 import 'package:profeapp/services/student_notifier.dart';
 import 'package:provider/provider.dart';
 import 'package:profeapp/screens/students/create_student_screen.dart';
 import 'package:profeapp/screens/students/student_detail_screen.dart';
 
-class StudentsScreen extends StatelessWidget {
-  const StudentsScreen({super.key});
+class StudentsScreen extends StatefulWidget {
+  final Group group;
+  const StudentsScreen({super.key, required this.group});
+
+  @override
+  State<StudentsScreen> createState() => _StudentsScreenState();
+}
+
+class _StudentsScreenState extends State<StudentsScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<StudentNotifier>(
+        context,
+        listen: false,
+      ).fetchStudents(int.parse(widget.group.id));
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -14,11 +32,13 @@ class StudentsScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Lista de Alumnos'),
+        title: Text('Alumnos - ${widget.group.name}'),
         backgroundColor: const Color(0xFF005E3E),
         foregroundColor: Colors.white,
       ),
-      body: students.isEmpty
+      body: studentNotifier.isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : students.isEmpty
           ? Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -36,11 +56,6 @@ class StudentsScreen extends StatelessWidget {
                       color: Colors.grey,
                       fontWeight: FontWeight.bold,
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Registra a tu primer alumno',
-                    style: TextStyle(color: Colors.grey),
                   ),
                 ],
               ),
@@ -91,18 +106,6 @@ class StudentsScreen extends StatelessWidget {
                                 style: TextStyle(fontWeight: FontWeight.bold),
                               ),
                             ),
-                            DataColumn(
-                              label: Text(
-                                'Est. (cm)',
-                                style: TextStyle(fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                            DataColumn(
-                              label: Text(
-                                'Peso (kg)',
-                                style: TextStyle(fontWeight: FontWeight.bold),
-                              ),
-                            ),
                           ],
                           rows: List<DataRow>.generate(students.length, (
                             index,
@@ -114,8 +117,10 @@ class StudentsScreen extends StatelessWidget {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) =>
-                                          StudentDetailScreen(student: student),
+                                      builder: (context) => StudentDetailScreen(
+                                        student: student,
+                                        group: widget.group,
+                                      ),
                                     ),
                                   );
                                 }
@@ -132,12 +137,6 @@ class StudentsScreen extends StatelessWidget {
                                         : 'Femenino',
                                   ),
                                 ),
-                                DataCell(
-                                  Text(student.height?.toString() ?? '-'),
-                                ),
-                                DataCell(
-                                  Text(student.weight?.toString() ?? '-'),
-                                ),
                               ],
                             );
                           }),
@@ -153,7 +152,7 @@ class StudentsScreen extends StatelessWidget {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => const CreateStudentScreen(),
+              builder: (context) => CreateStudentScreen(group: widget.group),
             ),
           );
         },

@@ -11,6 +11,9 @@ import 'package:profeapp/services/attendance_notifier.dart';
 import 'package:profeapp/services/task_notifier.dart';
 import 'package:profeapp/services/subject_notifier.dart';
 import 'package:profeapp/services/grade_notifier.dart';
+import 'package:profeapp/services/behavior_notifier.dart';
+import 'package:profeapp/services/report_notifier.dart';
+import 'package:profeapp/services/notification_notifier.dart';
 
 void main() {
   runApp(
@@ -24,6 +27,9 @@ void main() {
         ChangeNotifierProvider(create: (_) => TaskNotifier()),
         ChangeNotifierProvider(create: (_) => SubjectNotifier()),
         ChangeNotifierProvider(create: (_) => GradeNotifier()),
+        ChangeNotifierProvider(create: (_) => BehaviorNotifier()),
+        ChangeNotifierProvider(create: (_) => ReportNotifier()),
+        ChangeNotifierProvider(create: (_) => NotificationNotifier()),
       ],
       child: const MyApp(),
     ),
@@ -39,9 +45,9 @@ class MyApp extends StatelessWidget {
 
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Flutter Demo',
-      theme: ThemeData.light(),
-      darkTheme: ThemeData.dark(),
+      title: 'ProfeApp',
+      theme: ThemeNotifier.lightTheme,
+      darkTheme: ThemeNotifier.darkTheme,
       themeMode: themeNotifier.currentTheme,
       routes: {'/splash': (context) => SplashScreen()},
       initialRoute: '/splash',

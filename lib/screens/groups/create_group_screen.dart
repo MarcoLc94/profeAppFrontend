@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:profeapp/models/group.dart';
 import 'package:profeapp/services/group_notifier.dart';
 import 'package:provider/provider.dart';
 
@@ -28,12 +27,10 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
     if (_formKey.currentState!.validate()) {
       final groupNotifier = Provider.of<GroupNotifier>(context, listen: false);
       groupNotifier.addGroup(
-        Group(
-          id: DateTime.now().millisecondsSinceEpoch.toString(),
-          name: _nameController.text,
-          grade: _gradeController.text,
-          schoolYear: _schoolYearController.text,
-        ),
+        1, // Mock user ID
+        _nameController.text,
+        _gradeController.text,
+        _schoolYearController.text,
       );
       Navigator.pop(context);
     }

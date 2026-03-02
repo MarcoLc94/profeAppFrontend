@@ -5,9 +5,9 @@ import 'package:profeapp/models/attendance.dart';
 import 'package:profeapp/services/student_notifier.dart';
 
 class AttendanceDetailScreen extends StatelessWidget {
-  final AttendanceRecord record;
+  final AttendanceSession session;
 
-  const AttendanceDetailScreen({super.key, required this.record});
+  const AttendanceDetailScreen({super.key, required this.session});
 
   @override
   Widget build(BuildContext context) {
@@ -24,65 +24,73 @@ class AttendanceDetailScreen extends StatelessWidget {
         children: [
           Container(
             padding: const EdgeInsets.all(24),
-            color: const Color(0xFF005E3E).withValues(alpha: 0.05),
+            color: const Color(0xFF005E3E).withOpacity(0.05),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 _buildStatItem(
                   'Presentes',
-                  '${record.totalPresent}',
+                  '${session.totalPresent}',
                   Colors.green,
                 ),
                 _buildStatItem(
                   'Retardos',
-                  '${record.totalLate}',
+                  '${session.totalLate}',
                   Colors.orange,
                 ),
-                _buildStatItem('Ausentes', '${record.totalAbsent}', Colors.red),
+                _buildStatItem(
+                  'Ausentes',
+                  '${session.totalAbsent}',
+                  Colors.red,
+                ),
               ],
             ),
           ),
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: Text(
-              'Fecha: ${DateFormat('dd/MM/yyyy HH:mm').format(record.date)}',
+              'Fecha: ${DateFormat('dd/MM/yyyy').format(session.date)} ${session.time}',
               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             ),
           ),
           Expanded(
-            child: students.isEmpty
-                ? const Center(child: Text('No hay información de alumnos'))
+            child: session.records.isEmpty
+                ? const Center(child: Text('No hay registros en esta sesión'))
                 : ListView.builder(
-                    itemCount: students.length,
+                    itemCount: session.records.length,
                     itemBuilder: (context, index) {
-                      final student = students[index];
-                      final entry = record.attendanceMap[student.id];
+                      final entry = session.records[index];
+                      // Find student name from notifier or fallback to ID
+                      final student = students.cast<dynamic>().firstWhere(
+                        (s) => s.id == entry.studentId,
+                        orElse: () => null,
+                      );
 
-                      if (entry == null) return const SizedBox.shrink();
-
-                      final isPresent =
-                          entry.status == AttendanceStatus.present;
-                      final isLate = entry.status == AttendanceStatus.late;
-                      final isAbsent = entry.status == AttendanceStatus.absent;
+                      final studentName =
+                          student?.fullName ?? 'Alumno ID: ${entry.studentId}';
 
                       Color statusColor = Colors.grey;
                       String statusText = '';
                       IconData statusIcon = Icons.help_outline;
 
-                      if (isPresent) {
-                        statusColor = Colors.green;
-                        statusText = 'Presente';
-                        statusIcon = Icons.check_rounded;
-                      } else if (isLate) {
-                        statusColor = Colors.orange;
-                        statusText = 'Retardo';
-                        statusIcon = Icons.history_rounded;
-                      } else if (isAbsent) {
-                        statusColor = Colors.red;
-                        statusText = entry.isJustified
-                            ? 'Ausente (Justificado)'
-                            : 'Ausente';
-                        statusIcon = Icons.close_rounded;
+                      switch (entry.status) {
+                        case AttendanceStatus.present:
+                          statusColor = Colors.green;
+                          statusText = 'Presente';
+                          statusIcon = Icons.check_rounded;
+                          break;
+                        case AttendanceStatus.late:
+                          statusColor = Colors.orange;
+                          statusText = 'Retardo';
+                          statusIcon = Icons.history_rounded;
+                          break;
+                        case AttendanceStatus.absent:
+                          statusColor = Colors.red;
+                          statusText = entry.isJustified
+                              ? 'Ausente (Justificado)'
+                              : 'Ausente';
+                          statusIcon = Icons.close_rounded;
+                          break;
                       }
 
                       return Card(
@@ -92,11 +100,11 @@ class AttendanceDetailScreen extends StatelessWidget {
                         ),
                         child: ListTile(
                           leading: CircleAvatar(
-                            backgroundColor: statusColor.withValues(alpha: 0.1),
+                            backgroundColor: statusColor.withOpacity(0.1),
                             child: Icon(statusIcon, color: statusColor),
                           ),
                           title: Text(
-                            student.fullName,
+                            studentName,
                             style: const TextStyle(fontWeight: FontWeight.bold),
                           ),
                           trailing: Container(
@@ -105,7 +113,7 @@ class AttendanceDetailScreen extends StatelessWidget {
                               vertical: 4,
                             ),
                             decoration: BoxDecoration(
-                              color: statusColor.withValues(alpha: 0.1),
+                              color: statusColor.withOpacity(0.1),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Text(

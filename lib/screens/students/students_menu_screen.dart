@@ -1,18 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:profeapp/models/group.dart';
 import 'package:profeapp/screens/students/students_screen.dart';
 import 'package:profeapp/screens/attendance/attendance_screen.dart';
 import 'package:profeapp/screens/tasks/tasks_screen.dart';
 import 'package:profeapp/screens/reports/reports_screen.dart';
+import 'package:profeapp/screens/behavior/behavior_screen.dart';
 import 'package:profeapp/screens/grades/grades_screen.dart';
 
 class StudentsMenuScreen extends StatelessWidget {
-  const StudentsMenuScreen({super.key});
+  final Group group;
+
+  const StudentsMenuScreen({super.key, required this.group});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Alumnos'),
+        title: Text('Grupo ${group.name}'),
         backgroundColor: const Color(0xFF005E3E),
         foregroundColor: Colors.white,
       ),
@@ -29,9 +33,9 @@ class StudentsMenuScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 8),
-            const Text(
-              'Selecciona un módulo para gestionar a tus estudiantes.',
-              style: TextStyle(color: Colors.grey),
+            Text(
+              'Grado: ${group.grade} • Ciclo: ${group.schoolYear}',
+              style: const TextStyle(color: Colors.grey),
             ),
             const SizedBox(height: 24),
             Expanded(
@@ -49,7 +53,7 @@ class StudentsMenuScreen extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const StudentsScreen(),
+                          builder: (context) => StudentsScreen(group: group),
                         ),
                       );
                     },
@@ -63,22 +67,24 @@ class StudentsMenuScreen extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const AttendanceScreen(),
+                          builder: (context) => AttendanceScreen(group: group),
                         ),
                       );
                     },
                   ),
                   _buildMenuCard(
                     context,
-                    'Calificaciones',
-                    Icons.grade_rounded,
-                    Colors.orange,
-                  ),
-                  _buildMenuCard(
-                    context,
                     'Conducta',
                     Icons.emoji_emotions_outlined,
                     Colors.purple,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => BehaviorScreen(group: group),
+                        ),
+                      );
+                    },
                   ),
                   _buildMenuCard(
                     context,
@@ -89,7 +95,7 @@ class StudentsMenuScreen extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const TasksScreen(),
+                          builder: (context) => TasksScreen(group: group),
                         ),
                       );
                     },
@@ -97,13 +103,13 @@ class StudentsMenuScreen extends StatelessWidget {
                   _buildMenuCard(
                     context,
                     'Reporte',
-                    Icons.bar_chart_rounded,
+                    Icons.assignment_late_outlined,
                     Colors.redAccent,
                     onTap: () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const ReportsScreen(),
+                          builder: (context) => ReportsScreen(group: group),
                         ),
                       );
                     },
@@ -117,7 +123,7 @@ class StudentsMenuScreen extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const GradesScreen(),
+                          builder: (context) => GradesScreen(group: group),
                         ),
                       );
                     },

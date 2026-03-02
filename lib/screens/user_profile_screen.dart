@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:profeapp/services/auth_notifier.dart';
+import 'package:profeapp/states/theme/theme_notifier.dart';
 import 'package:provider/provider.dart';
 
 class UserProfileScreen extends StatelessWidget {
@@ -8,6 +9,7 @@ class UserProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final authNotifier = Provider.of<AuthNotifier>(context);
+    final themeNotifier = Provider.of<ThemeNotifier>(context);
 
     return Scaffold(
       appBar: AppBar(
@@ -44,7 +46,22 @@ class UserProfileScreen extends StatelessWidget {
             _buildProfileItem(Icons.email_outlined, 'john.doe@escuela.com'),
             _buildProfileItem(Icons.phone_outlined, '+52 555 123 4567'),
             _buildProfileItem(Icons.school_outlined, 'Primaria Benito Juárez'),
-            const SizedBox(height: 40),
+            const SizedBox(height: 24),
+            const Divider(),
+            const SizedBox(height: 8),
+            SwitchListTile(
+              title: const Text('Modo Oscuro'),
+              subtitle: const Text('Cambiar el aspecto visual'),
+              secondary: Icon(
+                themeNotifier.isDark ? Icons.dark_mode : Icons.light_mode,
+                color: themeNotifier.isDark
+                    ? Colors.amber
+                    : const Color(0xFF005E3E),
+              ),
+              value: themeNotifier.isDark,
+              onChanged: (value) => themeNotifier.toggleTheme(),
+            ),
+            const SizedBox(height: 24),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(

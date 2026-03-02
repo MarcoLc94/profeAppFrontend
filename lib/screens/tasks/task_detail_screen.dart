@@ -20,71 +20,58 @@ class TaskDetailScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Center(
-              child: Icon(
-                Icons.assignment_rounded,
-                size: 80,
-                color: const Color(0xFF005E3E).withValues(alpha: 0.8),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: const Color(0xFF005E3E).withOpacity(0.05),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.book, color: Color(0xFF005E3E)),
+                  const SizedBox(width: 12),
+                  Text(
+                    task.subject,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF005E3E),
+                    ),
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: 24),
-            _buildDetailSection(
-              context,
-              'Nombre de la Tarea',
-              task.name,
-              Icons.assignment_outlined,
+            Text(
+              task.title,
+              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 12),
+            if (task.description.isNotEmpty) ...[
+              Text(
+                task.description,
+                style: const TextStyle(fontSize: 16, color: Colors.grey),
+              ),
+              const SizedBox(height: 24),
+            ],
+            const Divider(),
+            const SizedBox(height: 16),
+            _buildInfoRow(
+              Icons.calendar_today,
+              'Fecha de Vencimiento',
+              DateFormat('dd/MM/yyyy').format(task.dueDate),
             ),
             const SizedBox(height: 16),
-            _buildDetailSection(
-              context,
-              'Materia',
-              task.subject,
-              Icons.book_outlined,
+            _buildInfoRow(
+              Icons.access_time,
+              'Hora de Vencimiento',
+              task.dueTime,
             ),
-            const Divider(height: 48),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildDetailSection(
-                    context,
-                    'Fecha de Vencimiento',
-                    DateFormat('dd/MM/yyyy').format(task.dueDate),
-                    Icons.calendar_today_outlined,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: _buildDetailSection(
-                    context,
-                    'Hora de Vencimiento',
-                    task.dueTime,
-                    Icons.access_time_outlined,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
-            _buildDetailSection(
-              context,
+            const SizedBox(height: 16),
+            _buildInfoRow(
+              Icons.add_circle_outline,
               'Fecha de Creación',
               DateFormat('dd/MM/yyyy HH:mm').format(task.creationDate),
-              Icons.create_outlined,
-            ),
-            const SizedBox(height: 48),
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: () {
-                  // Future edit function
-                },
-                icon: const Icon(Icons.edit_outlined),
-                label: const Text('EDITAR TAREA'),
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  side: const BorderSide(color: Color(0xFF005E3E)),
-                  foregroundColor: const Color(0xFF005E3E),
-                ),
-              ),
             ),
           ],
         ),
@@ -92,33 +79,23 @@ class TaskDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildDetailSection(
-    BuildContext context,
-    String label,
-    String value,
-    IconData icon,
-  ) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _buildInfoRow(IconData icon, String label, String value) {
+    return Row(
       children: [
-        Row(
+        Icon(icon, size: 20, color: Colors.grey),
+        const SizedBox(width: 12),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(icon, size: 16, color: Colors.grey),
-            const SizedBox(width: 8),
             Text(
               label,
-              style: const TextStyle(
-                color: Colors.grey,
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-              ),
+              style: const TextStyle(fontSize: 12, color: Colors.grey),
+            ),
+            Text(
+              value,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
           ],
-        ),
-        const SizedBox(height: 8),
-        Text(
-          value,
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
         ),
       ],
     );

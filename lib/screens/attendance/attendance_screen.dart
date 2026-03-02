@@ -1,25 +1,45 @@
 import 'package:flutter/material.dart';
+import 'package:profeapp/models/group.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:profeapp/services/attendance_notifier.dart';
 import 'package:profeapp/screens/attendance/take_attendance_screen.dart';
 import 'package:profeapp/screens/attendance/attendance_detail_screen.dart';
 
-class AttendanceScreen extends StatelessWidget {
-  const AttendanceScreen({super.key});
+class AttendanceScreen extends StatefulWidget {
+  final Group group;
+  const AttendanceScreen({super.key, required this.group});
+
+  @override
+  State<AttendanceScreen> createState() => _AttendanceScreenState();
+}
+
+class _AttendanceScreenState extends State<AttendanceScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<AttendanceNotifier>(
+        context,
+        listen: false,
+      ).fetchSessions(int.parse(widget.group.id));
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     final attendanceNotifier = Provider.of<AttendanceNotifier>(context);
-    final records = attendanceNotifier.records;
+    final sessions = attendanceNotifier.sessions;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Asistencia'),
+        title: Text('Asistencia - ${widget.group.name}'),
         backgroundColor: const Color(0xFF005E3E),
         foregroundColor: Colors.white,
       ),
-      body: records.isEmpty
+      body: attendanceNotifier.isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : sessions.isEmpty
           ? Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -27,7 +47,7 @@ class AttendanceScreen extends StatelessWidget {
                   Icon(
                     Icons.event_note_rounded,
                     size: 80,
-                    color: Colors.grey.withValues(alpha: 0.5),
+                    color: Colors.grey.withOpacity(0.5),
                   ),
                   const SizedBox(height: 16),
                   const Text(
@@ -58,7 +78,7 @@ class AttendanceScreen extends StatelessWidget {
                         child: DataTable(
                           columnSpacing: 24,
                           headingRowColor: WidgetStateProperty.all(
-                            const Color(0xFF005E3E).withValues(alpha: 0.05),
+                            const Color(0xFF005E3E).withOpacity(0.05),
                           ),
                           columns: const [
                             DataColumn(
@@ -92,51 +112,46 @@ class AttendanceScreen extends StatelessWidget {
                               ),
                             ),
                           ],
-                          rows: List<DataRow>.generate(records.length, (index) {
-                            final record = records[index];
+                          rows: List<DataRow>.generate(sessions.length, (
+                            index,
+                          ) {
+                            final session = sessions[index];
                             return DataRow(
                               onSelectChanged: (selected) {
-                                // Detailed view on double tap or simple tap?
-                                // User requested double click (doble click me aparecerea una lista vertical)
-                                // Since DataTable doesn't have double tap directly on DataRow easily without wrapping cell,
-                                // I'll use simple tap for now or wrap cell.
-                                // Let's use simple tap for convenience or add a gesture detector to the whole row if possible.
                                 if (selected != null && selected) {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
                                       builder: (context) =>
                                           AttendanceDetailScreen(
-                                            record: record,
+                                            session: session,
                                           ),
                                     ),
                                   );
                                 }
                               },
                               cells: [
-                                DataCell(Text('${records.length - index}')),
+                                DataCell(Text('${index + 1}')),
                                 DataCell(
                                   Text(
                                     DateFormat(
                                       'dd/MM/yyyy',
-                                    ).format(record.date),
+                                    ).format(session.date),
                                   ),
                                 ),
-                                DataCell(
-                                  Text(DateFormat('HH:mm').format(record.date)),
-                                ),
+                                DataCell(Text(session.time)),
                                 DataCell(
                                   Text(
-                                    '${record.totalPresent + record.totalLate}/${record.totalStudents}',
+                                    '${session.totalPresent + session.totalLate}/${session.totalStudents}',
                                   ),
                                 ),
                                 DataCell(
                                   Text(
-                                    '${record.attendancePercentage.toStringAsFixed(1)}%',
+                                    '${session.attendancePercentage.toStringAsFixed(1)}%',
                                     style: TextStyle(
-                                      color: record.attendancePercentage >= 80
+                                      color: session.attendancePercentage >= 80
                                           ? Colors.green
-                                          : (record.attendancePercentage >= 60
+                                          : (session.attendancePercentage >= 60
                                                 ? Colors.orange
                                                 : Colors.red),
                                       fontWeight: FontWeight.bold,
@@ -158,7 +173,7 @@ class AttendanceScreen extends StatelessWidget {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => const TakeAttendanceScreen(),
+              builder: (context) => TakeAttendanceScreen(group: widget.group),
             ),
           );
         },

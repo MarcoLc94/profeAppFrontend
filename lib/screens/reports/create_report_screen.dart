@@ -1,56 +1,55 @@
 import 'package:flutter/material.dart';
+import 'package:profeapp/models/group.dart';
 import 'package:provider/provider.dart';
-import 'package:profeapp/models/task.dart';
-import 'package:profeapp/models/grade.dart';
+import 'package:profeapp/models/report.dart';
 import 'package:profeapp/models/student.dart';
 import 'package:profeapp/services/student_notifier.dart';
-import 'package:profeapp/services/grade_notifier.dart';
+import 'package:profeapp/services/report_notifier.dart';
 
-class GradeStudentScreen extends StatefulWidget {
-  final Task task;
-
-  const GradeStudentScreen({super.key, required this.task});
+class CreateReportScreen extends StatefulWidget {
+  final Group group;
+  const CreateReportScreen({super.key, required this.group});
 
   @override
-  State<GradeStudentScreen> createState() => _GradeStudentScreenState();
+  State<CreateReportScreen> createState() => _CreateReportScreenState();
 }
 
-class _GradeStudentScreenState extends State<GradeStudentScreen> {
-  Student? _selectedStudent;
-  final _scoreController = TextEditingController();
-  final _commentController = TextEditingController();
+class _CreateReportScreenState extends State<CreateReportScreen> {
   final _formKey = GlobalKey<FormState>();
+  Student? _selectedStudent;
+  final _titleController = TextEditingController();
+  final _descriptionController = TextEditingController();
 
   void _submit() async {
     if (_formKey.currentState!.validate() && _selectedStudent != null) {
-      final gradeNotifier = Provider.of<GradeNotifier>(context, listen: false);
+      final reportNotifier = Provider.of<ReportNotifier>(
+        context,
+        listen: false,
+      );
 
-      final newGrade = Grade(
+      final newReport = Report(
         id: '',
-        taskId: widget.task.id,
+        title: _titleController.text.trim(),
+        description: _descriptionController.text.trim(),
         studentId: _selectedStudent!.id,
-        score: double.parse(_scoreController.text),
-        comment: _commentController.text,
         date: DateTime.now(),
       );
 
-      final success = await gradeNotifier.addGrade(newGrade);
+      final success = await reportNotifier.addReport(newReport);
 
       if (mounted) {
         if (success) {
           Navigator.pop(context);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(
-                'El alumno ${_selectedStudent!.names} ha sido calificado',
-              ),
+              content: Text('Reporte creado para ${_selectedStudent!.names}'),
               backgroundColor: Colors.green,
               behavior: SnackBarBehavior.floating,
             ),
           );
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Error al calificar al alumno')),
+            const SnackBar(content: Text('Error al crear reporte')),
           );
         }
       }
@@ -67,7 +66,7 @@ class _GradeStudentScreenState extends State<GradeStudentScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Calificar Tarea'),
+        title: const Text('Nuevo Reporte'),
         backgroundColor: const Color(0xFF005E3E),
         foregroundColor: Colors.white,
       ),
@@ -78,15 +77,6 @@ class _GradeStudentScreenState extends State<GradeStudentScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text(
-                'Tarea: ${widget.task.title}',
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF005E3E),
-                ),
-              ),
-              const SizedBox(height: 24),
               const Text(
                 'Seleccionar Alumno:',
                 style: TextStyle(fontWeight: FontWeight.bold),
@@ -113,32 +103,28 @@ class _GradeStudentScreenState extends State<GradeStudentScreen> {
               ),
               const SizedBox(height: 24),
               TextFormField(
-                controller: _scoreController,
+                controller: _titleController,
                 decoration: const InputDecoration(
-                  labelText: 'Calificación',
+                  labelText: 'Título del Reporte',
                   border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.star_rounded),
-                  hintText: 'Ej: 10.0',
+                  prefixIcon: Icon(Icons.title_rounded),
                 ),
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) return 'Campo requerido';
-                  if (double.tryParse(value) == null)
-                    return 'Ingresa un número válido';
-                  return null;
-                },
+                validator: (value) => value == null || value.isEmpty
+                    ? 'Por favor ingresa un título'
+                    : null,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 24),
               TextFormField(
-                controller: _commentController,
+                controller: _descriptionController,
                 decoration: const InputDecoration(
-                  labelText: 'Comentario (opcional)',
+                  labelText: 'Descripción del incidente',
                   border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.comment_rounded),
+                  alignLabelWithHint: true,
                 ),
-                maxLines: 3,
+                maxLines: 6,
+                validator: (value) => value == null || value.isEmpty
+                    ? 'Por favor describe el reporte'
+                    : null,
               ),
               const SizedBox(height: 48),
               ElevatedButton(
@@ -152,7 +138,7 @@ class _GradeStudentScreenState extends State<GradeStudentScreen> {
                   ),
                 ),
                 child: const Text(
-                  'CALIFICAR',
+                  'CREAR REPORTE',
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
               ),

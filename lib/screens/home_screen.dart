@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:profeapp/screens/groups/groups_screen.dart';
 import 'package:profeapp/screens/user_profile_screen.dart';
 import 'package:profeapp/screens/subjects/subjects_grades_screen.dart';
+import 'package:profeapp/screens/notifications/notifications_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -113,9 +114,17 @@ class HomeScreen extends StatelessWidget {
                   ),
                   _buildDashboardCard(
                     context,
-                    'Recordatorios',
+                    'Notificaciones',
                     Icons.notifications_active_outlined,
                     Colors.redAccent,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const NotificationsScreen(),
+                        ),
+                      );
+                    },
                   ),
                 ],
               ),

@@ -1,11 +1,31 @@
 import 'package:flutter/material.dart';
-import 'package:profeapp/screens/students/students_menu_screen.dart';
 import 'package:profeapp/services/group_notifier.dart';
 import 'package:provider/provider.dart';
+import 'package:profeapp/services/auth_notifier.dart';
 import 'package:profeapp/screens/groups/create_group_screen.dart';
+import 'package:profeapp/screens/students/students_menu_screen.dart';
 
-class GroupsScreen extends StatelessWidget {
+class GroupsScreen extends StatefulWidget {
   const GroupsScreen({super.key});
+
+  @override
+  State<GroupsScreen> createState() => _GroupsScreenState();
+}
+
+class _GroupsScreenState extends State<GroupsScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final user = Provider.of<AuthNotifier>(context, listen: false).user;
+      if (user != null) {
+        Provider.of<GroupNotifier>(
+          context,
+          listen: false,
+        ).fetchGroups(int.parse(user.id));
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -18,7 +38,9 @@ class GroupsScreen extends StatelessWidget {
         backgroundColor: const Color(0xFF005E3E),
         foregroundColor: Colors.white,
       ),
-      body: groups.isEmpty
+      body: groupNotifier.isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : groups.isEmpty
           ? Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -81,7 +103,8 @@ class GroupsScreen extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const StudentsMenuScreen(),
+                          builder: (context) =>
+                              StudentsMenuScreen(group: group),
                         ),
                       );
                     },

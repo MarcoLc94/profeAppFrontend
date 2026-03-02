@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:profeapp/models/group.dart';
 import 'package:provider/provider.dart';
 import 'package:profeapp/models/attendance.dart';
 import 'package:profeapp/services/student_notifier.dart';
 import 'package:profeapp/services/attendance_notifier.dart';
 
 class TakeAttendanceScreen extends StatefulWidget {
-  const TakeAttendanceScreen({super.key});
+  final Group group;
+  const TakeAttendanceScreen({super.key, required this.group});
 
   @override
   State<TakeAttendanceScreen> createState() => _TakeAttendanceScreenState();
@@ -16,9 +19,27 @@ class _TakeAttendanceScreenState extends State<TakeAttendanceScreen> {
   final Map<String, AttendanceEntry> _attendanceMap = {};
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<StudentNotifier>(
+        context,
+        listen: false,
+      ).fetchStudents(int.parse(widget.group.id));
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final studentNotifier = Provider.of<StudentNotifier>(context);
     final students = studentNotifier.students;
+
+    if (studentNotifier.isLoading) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Tomar Asistencia')),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
 
     if (students.isEmpty) {
       return Scaffold(
@@ -48,7 +69,7 @@ class _TakeAttendanceScreenState extends State<TakeAttendanceScreen> {
               ),
               const SizedBox(height: 24),
               Text(
-                '${currentStudent.names} ${currentStudent.lastNames}',
+                currentStudent.fullName,
                 style: const TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
@@ -60,7 +81,6 @@ class _TakeAttendanceScreenState extends State<TakeAttendanceScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  // Ausente Button
                   _buildAttendanceButton(
                     icon: Icons.close_rounded,
                     label: 'Ausente',
@@ -68,25 +88,31 @@ class _TakeAttendanceScreenState extends State<TakeAttendanceScreen> {
                     onTap: () =>
                         _handleAbsent(currentStudent.id, students.length),
                   ),
-                  // Retardo Button
                   _buildAttendanceButton(
                     icon: Icons.history_rounded,
                     label: 'Retardo',
                     color: Colors.orange,
                     onTap: () => _markAttendance(
                       currentStudent.id,
-                      AttendanceEntry(status: AttendanceStatus.late),
+                      AttendanceEntry(
+                        id: '',
+                        studentId: currentStudent.id,
+                        status: AttendanceStatus.late,
+                      ),
                       students.length,
                     ),
                   ),
-                  // Presente Button
                   _buildAttendanceButton(
                     icon: Icons.check_rounded,
                     label: 'Presente',
                     color: Colors.green,
                     onTap: () => _markAttendance(
                       currentStudent.id,
-                      AttendanceEntry(status: AttendanceStatus.present),
+                      AttendanceEntry(
+                        id: '',
+                        studentId: currentStudent.id,
+                        status: AttendanceStatus.present,
+                      ),
                       students.length,
                     ),
                   ),
@@ -113,7 +139,7 @@ class _TakeAttendanceScreenState extends State<TakeAttendanceScreen> {
             width: 70,
             height: 70,
             decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.1),
+              color: color.withOpacity(0.1),
               shape: BoxShape.circle,
               border: Border.all(color: color, width: 3),
             ),
@@ -147,6 +173,8 @@ class _TakeAttendanceScreenState extends State<TakeAttendanceScreen> {
               _markAttendance(
                 studentId,
                 AttendanceEntry(
+                  id: '',
+                  studentId: studentId,
                   status: AttendanceStatus.absent,
                   isJustified: false,
                 ),
@@ -164,6 +192,8 @@ class _TakeAttendanceScreenState extends State<TakeAttendanceScreen> {
               _markAttendance(
                 studentId,
                 AttendanceEntry(
+                  id: '',
+                  studentId: studentId,
                   status: AttendanceStatus.absent,
                   isJustified: true,
                 ),
@@ -196,21 +226,41 @@ class _TakeAttendanceScreenState extends State<TakeAttendanceScreen> {
     }
   }
 
-  void _finishAttendance() {
+  Future<void> _finishAttendance() async {
     final attendanceNotifier = Provider.of<AttendanceNotifier>(
       context,
       listen: false,
     );
 
-    final record = AttendanceRecord(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      date: DateTime.now(),
-      attendanceMap: Map.from(_attendanceMap),
+    final List<Map<String, dynamic>> records = _attendanceMap.values
+        .map(
+          (e) => {
+            'student_id': int.parse(e.studentId),
+            'status': e.statusValue,
+            'is_justified': e.isJustified,
+          },
+        )
+        .toList();
+
+    final now = DateTime.now();
+    final timeStr = DateFormat('HH:mm').format(now);
+
+    final success = await attendanceNotifier.addSession(
+      int.parse(widget.group.id),
+      now,
+      timeStr,
+      records,
     );
 
-    attendanceNotifier.addRecord(record);
-
-    _showSuccessDialog();
+    if (success) {
+      _showSuccessDialog();
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Error al guardar la asistencia')),
+        );
+      }
+    }
   }
 
   void _showSuccessDialog() {

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:profeapp/models/group.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:profeapp/services/task_notifier.dart';
@@ -7,8 +8,25 @@ import 'package:profeapp/screens/tasks/create_task_screen.dart';
 import 'package:profeapp/screens/tasks/task_detail_screen.dart';
 import 'package:profeapp/screens/tasks/grade_student_screen.dart';
 
-class TasksScreen extends StatelessWidget {
-  const TasksScreen({super.key});
+class TasksScreen extends StatefulWidget {
+  final Group group;
+  const TasksScreen({super.key, required this.group});
+
+  @override
+  State<TasksScreen> createState() => _TasksScreenState();
+}
+
+class _TasksScreenState extends State<TasksScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<TaskNotifier>(
+        context,
+        listen: false,
+      ).fetchTasks(int.parse(widget.group.id));
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -17,11 +35,13 @@ class TasksScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Tareas'),
+        title: Text('Tareas - ${widget.group.name}'),
         backgroundColor: const Color(0xFF005E3E),
         foregroundColor: Colors.white,
       ),
-      body: tasks.isEmpty
+      body: taskNotifier.isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : tasks.isEmpty
           ? Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -29,7 +49,7 @@ class TasksScreen extends StatelessWidget {
                   Icon(
                     Icons.assignment_outlined,
                     size: 80,
-                    color: Colors.grey.withValues(alpha: 0.5),
+                    color: Colors.grey.withOpacity(0.5),
                   ),
                   const SizedBox(height: 16),
                   const Text(
@@ -61,7 +81,7 @@ class TasksScreen extends StatelessWidget {
                           columnSpacing: 24,
                           showCheckboxColumn: false,
                           headingRowColor: WidgetStateProperty.all(
-                            const Color(0xFF005E3E).withValues(alpha: 0.05),
+                            const Color(0xFF005E3E).withOpacity(0.05),
                           ),
                           columns: const [
                             DataColumn(
@@ -107,7 +127,7 @@ class TasksScreen extends StatelessWidget {
                               },
                               cells: [
                                 DataCell(Text(task.subject)),
-                                DataCell(Text(task.name)),
+                                DataCell(Text(task.title)),
                                 DataCell(
                                   Text(
                                     DateFormat(
@@ -130,7 +150,9 @@ class TasksScreen extends StatelessWidget {
         onPressed: () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => const CreateTaskScreen()),
+            MaterialPageRoute(
+              builder: (context) => CreateTaskScreen(group: widget.group),
+            ),
           );
         },
         backgroundColor: const Color(0xFF005E3E),
@@ -152,7 +174,7 @@ class TasksScreen extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                task.name,
+                task.title,
                 style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -202,7 +224,7 @@ class TasksScreen extends StatelessWidget {
       builder: (context) => AlertDialog(
         title: const Text('Eliminar Tarea'),
         content: Text(
-          '¿Estás seguro de que deseas eliminar la tarea "${task.name}"?',
+          '¿Estás seguro de que deseas eliminar la tarea "${task.title}"?',
         ),
         actions: [
           TextButton(
@@ -210,15 +232,21 @@ class TasksScreen extends StatelessWidget {
             child: const Text('CANCELAR'),
           ),
           TextButton(
-            onPressed: () {
-              Provider.of<TaskNotifier>(
+            onPressed: () async {
+              final success = await Provider.of<TaskNotifier>(
                 context,
                 listen: false,
               ).removeTask(task.id);
-              Navigator.pop(context);
-              ScaffoldMessenger.of(
-                context,
-              ).showSnackBar(const SnackBar(content: Text('Tarea eliminada')));
+              if (mounted) {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      success ? 'Tarea eliminada' : 'Error al eliminar tarea',
+                    ),
+                  ),
+                );
+              }
             },
             child: const Text('ELIMINAR', style: TextStyle(color: Colors.red)),
           ),

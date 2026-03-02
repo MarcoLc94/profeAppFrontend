@@ -1,14 +1,16 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:profeapp/models/group.dart';
 import 'package:profeapp/models/student.dart';
 import 'package:profeapp/services/student_notifier.dart';
 import 'package:provider/provider.dart';
 
 class CreateStudentScreen extends StatefulWidget {
+  final Group group;
   final Student? student; // Optional student for editing
 
-  const CreateStudentScreen({super.key, this.student});
+  const CreateStudentScreen({super.key, required this.group, this.student});
 
   @override
   State<CreateStudentScreen> createState() => _CreateStudentScreenState();
@@ -127,7 +129,7 @@ class _CreateStudentScreenState extends State<CreateStudentScreen> {
       );
 
       if (widget.student == null) {
-        studentNotifier.addStudent(studentData);
+        studentNotifier.addStudent(int.parse(widget.group.id), studentData);
       } else {
         studentNotifier.updateStudent(studentData);
       }
@@ -160,7 +162,8 @@ class _CreateStudentScreenState extends State<CreateStudentScreen> {
                     CircleAvatar(
                       radius: 60,
                       backgroundColor: Colors.grey[200],
-                      backgroundImage: _photoPath != null
+                      backgroundImage:
+                          _photoPath != null && _photoPath!.startsWith('/')
                           ? FileImage(File(_photoPath!))
                           : null,
                       child: _photoPath == null
